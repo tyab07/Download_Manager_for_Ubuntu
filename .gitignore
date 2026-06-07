@@ -2,6 +2,12 @@
 # Improved readability with distinct sections
 
 # [SECTION: PYTHON]
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 
 # [SECTION: ENVIRONMENTS]
 
