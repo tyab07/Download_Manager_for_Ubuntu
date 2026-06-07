@@ -22,3 +22,15 @@ Thumbs.db
 *.log
 
 # [SECTION: PROJECT SPECIFIC]
+downloads/
+downloads.db
+TDDownloader_Installer.tar.gz
+*.desktop
+*.sh
+installer_gui.py
+main.py
+chrome_extension/
+core/
+gui/
+README.md
+# requirements.txt - explicitly tracked
