@@ -10,7 +10,15 @@ __pycache__/
 
 
 # [SECTION: ENVIRONMENTS]
+venv/
+env/
+.env
+.venv
+ENV/
 
 # [SECTION: SYSTEM]
+.DS_Store
+Thumbs.db
+*.log
 
 # [SECTION: PROJECT SPECIFIC]
