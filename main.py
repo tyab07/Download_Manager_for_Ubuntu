@@ -31,3 +31,10 @@ def main():
     app.setApplicationVersion("2.0.0")
     app.setOrganizationName("TDDownloader")
 
+    # Set default font
+    font = QFont("Segoe UI", 10)
+    app.setFont(font)
+
+    # Dark palette
+    from PyQt6.QtGui import QPalette, QColor
+    palette = QPalette()
