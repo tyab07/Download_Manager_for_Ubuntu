@@ -179,3 +179,45 @@ class InstallerApp(tk.Tk):
         self.install_btn.pack(side="right")
 
     # ── Helpers ───────────────────────────────────────────────────────────────
+    def _log(self, msg, color=None):
+        self.log.configure(state="normal")
+        tag = None
+        if color:
+            tag = color
+            self.log.tag_configure(tag, foreground=color)
+        self.log.insert("end", msg + "\n", tag or ())
+        self.log.see("end")
+        self.log.configure(state="disabled")
+
+    def _step(self, name, index):
+        self.step_var.set(f"[{index+1}/{len(STEPS)}]  {name}…")
+        self.pbar["value"] = index
+        self.update_idletasks()
+        self._log(f"  →  {name}")
+
+    def _done(self):
+        self.pbar["value"] = len(STEPS)
+        self.step_var.set("✓  Installation complete!")
+        self._log("\n✓  TDDownloader has been installed successfully!", self.SUCCESS)
+        self._log(f"\n  Launcher:   tddownloader", "#aaaaff")
+        self._log(f"  Downloads:  {DOWNLOAD_DIR}", "#aaaaff")
+        self._log(
+            f"\n  Chrome Extension:\n"
+            f"    1. Open  chrome://extensions\n"
+            f"    2. Enable Developer mode\n"
+            f"    3. Click Load unpacked\n"
+            f"    4. Select: {INSTALL_DIR}/chrome_extension",
+            "#aaaaff"
+        )
+        self.install_btn.configure(state="disabled")
+        self.close_btn.configure(text="Close", bg=self.SUCCESS,
+                                  fg="white", activebackground="#66BB6A")
+
+    def _fail(self, msg):
+        self.step_var.set("✗  Installation failed")
+        self._log(f"\n✗  Error: {msg}", self.ERROR)
+        self.install_btn.configure(state="normal", text="  Retry  ")
+        messagebox.showerror("Installation Failed",
+                             f"An error occurred:\n{msg}")
+
+    # ── Install logic (runs in a thread) ─────────────────────────────────────
