@@ -59,3 +59,33 @@ STEPS = [
     "Finalising",
 ]
 
+def find_python():
+    for cmd in ["python3", "python"]:
+        try:
+            out = subprocess.check_output(
+                [cmd, "-c",
+                 "import sys; v=sys.version_info; "
+                 "print(v.major, v.minor, v.patch if hasattr(v,'patch') else 0)"],
+                text=True, stderr=subprocess.DEVNULL
+            ).split()
+            major, minor = int(out[0]), int(out[1])
+            if major >= 3 and minor >= 10:
+                return cmd
+        except Exception:
+            pass
+    return None
+
+def copy_tree(src: Path, dst: Path):
+    for item in src.iterdir():
+        if item.name in ("__pycache__", "venv", ".git"):
+            continue
+        if item.suffix in (".db", ".tar.gz"):
+            continue
+        target = dst / item.name
+        if item.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+            copy_tree(item, target)
+        else:
+            shutil.copy2(item, target)
+
+# ── Main GUI class ────────────────────────────────────────────────────────────
