@@ -29,3 +29,33 @@ DESKTOP_DIR   = Path.home() / ".local/share/applications"
 ICON_DIR      = Path.home() / ".local/share/icons/hicolor/128x128/apps"
 DOWNLOAD_DIR  = Path.home() / "TDdownloader"
 
+SVG_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6C63FF"/>
+      <stop offset="100%" stop-color="#3F3D9E"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <g transform="translate(64,64)" stroke="white" stroke-width="6"
+     stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M0,-30 L0,20"/>
+    <polyline points="-15,5 0,20 15,5"/>
+    <path d="M-25,30 L25,30"/>
+  </g>
+</svg>"""
+
+# ── Installer steps ───────────────────────────────────────────────────────────
+STEPS = [
+    "Checking Python environment",
+    "Installing dependencies (ffmpeg)",
+    "Creating installation directory",
+    "Copying application files",
+    "Creating virtual environment",
+    "Installing Python packages",
+    "Creating launcher command",
+    "Installing desktop shortcut",
+    "Creating downloads folder",
+    "Finalising",
+]
+
