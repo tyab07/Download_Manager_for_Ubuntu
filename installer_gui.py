@@ -221,3 +221,152 @@ class InstallerApp(tk.Tk):
                              f"An error occurred:\n{msg}")
 
     # ── Install logic (runs in a thread) ─────────────────────────────────────
+    def _start_install(self):
+        self.install_btn.configure(state="disabled")
+        threading.Thread(target=self._install_thread, daemon=True).start()
+
+    def _install_thread(self):
+        try:
+            # Step 0: Check Python
+            self.after(0, self._step, STEPS[0], 0)
+            python = find_python()
+            if not python:
+                raise RuntimeError(
+                    "Python 3.10+ not found.\n"
+                    "Install it: sudo apt install python3 python3-venv python3-pip")
+            self._log(f"     Found Python: {python}")
+
+            # Check / install tkinter notice
+            try:
+                subprocess.check_call(
+                    [python, "-c", "import pip"], stderr=subprocess.DEVNULL)
+            except subprocess.CalledProcessError:
+                raise RuntimeError(
+                    "pip is not available.\n"
+                    "Run: sudo apt install python3-pip python3-venv")
+
+            # Step 1: Install system dependencies
+            self.after(0, self._step, STEPS[1], 1)
+            if not shutil.which("ffmpeg"):
+                self._log("     ffmpeg not found. Attempting to install...")
+                try:
+                    subprocess.run(
+                        ["x-terminal-emulator", "-e", "sudo apt-get update && sudo apt-get install -y ffmpeg"],
+                        check=False
+                    )
+                except Exception:
+                    pass
+                if not shutil.which("ffmpeg"):
+                    self._log("     WARNING: ffmpeg could not be installed. YouTube audio merging will fail!", self.ERROR)
+            else:
+                self._log("     Found ffmpeg")
+
+            # Step 2: Create directories
+            self.after(0, self._step, STEPS[2], 2)
+            for d in [INSTALL_DIR / "core", INSTALL_DIR / "gui",
+                       INSTALL_DIR / "chrome_extension" / "icons",
+                       INSTALL_DIR / "assets"]:
+                d.mkdir(parents=True, exist_ok=True)
+
+            # Step 3: Copy files
+            self.after(0, self._step, STEPS[3], 3)
+            file_roots = ["main.py", "requirements.txt", "uninstall.sh"]
+            for f in file_roots:
+                src = SCRIPT_DIR / f
+                if src.exists():
+                    shutil.copy2(src, INSTALL_DIR / f)
+            for folder in ["core", "gui", "chrome_extension"]:
+                src = SCRIPT_DIR / folder
+                if src.exists():
+                    copy_tree(src, INSTALL_DIR / folder)
+
+            # Copy desktop
+            desk_src = SCRIPT_DIR / "tddownloader.desktop"
+            if desk_src.exists():
+                shutil.copy2(desk_src, INSTALL_DIR / "tddownloader.desktop")
+
+            # Step 4: Create venv
+            self.after(0, self._step, STEPS[4], 4)
+            venv = INSTALL_DIR / "venv"
+            subprocess.check_call(
+                [python, "-m", "venv", str(venv)],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            # Step 5: Install deps
+            self.after(0, self._step, STEPS[5], 5)
+            pip = venv / "bin" / "pip"
+            req = INSTALL_DIR / "requirements.txt"
+            subprocess.check_call(
+                [str(pip), "install", "--upgrade", "pip", "-q"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.check_call(
+                [str(pip), "install", "-r", str(req), "-q"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            # Step 6: Launcher
+            self.after(0, self._step, STEPS[6], 6)
+            BIN_DIR.mkdir(parents=True, exist_ok=True)
+            launcher = BIN_DIR / "tddownloader"
+            launcher.write_text(
+                f"#!/usr/bin/env bash\n"
+                f"cd {INSTALL_DIR}\n"
+                f"exec {venv}/bin/python main.py \"$@\"\n"
+            )
+            launcher.chmod(0o755)
+
+            # Make sure ~/.local/bin is in PATH
+            for rc in [Path.home() / ".bashrc", Path.home() / ".zshrc"]:
+                if rc.exists():
+                    content = rc.read_text()
+                    if str(BIN_DIR) not in content:
+                        rc.write_text(
+                            content +
+                            f'\nexport PATH="{BIN_DIR}:$PATH"  # TDDownloader\n')
+                    break
+
+            # Step 7: Desktop shortcut
+            self.after(0, self._step, STEPS[7], 7)
+            DESKTOP_DIR.mkdir(parents=True, exist_ok=True)
+
+            icon_path = INSTALL_DIR / "assets" / "tddownloader.svg"
+            icon_path.write_text(SVG_ICON)
+
+            desktop_content = (
+                "[Desktop Entry]\n"
+                "Name=TDDownloader\n"
+                "Comment=IDM-like Download Manager for Linux\n"
+                f"Exec={launcher}\n"
+                f"Icon={icon_path}\n"
+                "Type=Application\n"
+                "Categories=Network;FileTransfer;\n"
+                "Terminal=false\n"
+                "StartupNotify=true\n"
+            )
+            desktop_file = DESKTOP_DIR / "tddownloader.desktop"
+            desktop_file.write_text(desktop_content)
+            desktop_file.chmod(0o755)
+
+            subprocess.run(
+                ["update-desktop-database", str(DESKTOP_DIR)],
+                stderr=subprocess.DEVNULL)
+
+            # Step 8: Downloads folder
+            self.after(0, self._step, STEPS[8], 8)
+            DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+            # Step 9: Done
+            self.after(0, self._step, STEPS[9], 9)
+            self.after(0, self._done)
+
+        except Exception as e:
+            self.after(0, self._fail, str(e))
+
+    def _on_close(self):
+        if not messagebox.askokcancel("Exit", "Cancel installation?"):
+            return
+        self.destroy()
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    app = InstallerApp()
+    app.mainloop()
