@@ -50,3 +50,12 @@ def main():
     palette.setColor(QPalette.ColorRole.Highlight, QColor("#6C63FF"))
     palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#ffffff"))
     app.setPalette(palette)
+
+    window = MainWindow()
+    window.show()
+
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
