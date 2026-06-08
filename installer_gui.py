@@ -113,3 +113,69 @@ class InstallerApp(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
     # ── UI ────────────────────────────────────────────────────────────────────
+    def _build_ui(self):
+        # Header
+        hdr = tk.Frame(self, bg=self.ACCENT, height=70)
+        hdr.pack(fill="x")
+        hdr.pack_propagate(False)
+
+        tk.Label(hdr, text="TDDownloader", bg=self.ACCENT, fg="white",
+                 font=("Segoe UI", 22, "bold")).pack(side="left", padx=24)
+        tk.Label(hdr, text="v2.0  ·  Linux Installer", bg=self.ACCENT,
+                 fg="rgba(255,255,255,0.7)", font=("Segoe UI", 11)).pack(
+                 side="left", padx=4, pady=26)
+
+        # Body
+        body = tk.Frame(self, bg=self.BG)
+        body.pack(fill="both", expand=True, padx=32, pady=20)
+
+        # Description
+        tk.Label(body,
+                 text="This will install TDDownloader on your system,\n"
+                      "set up the launcher, and create a desktop shortcut.",
+                 bg=self.BG, fg=self.FG_DIM, font=("Segoe UI", 11),
+                 justify="left").pack(anchor="w", pady=(0, 18))
+
+        # --- Current step label ---
+        self.step_var = tk.StringVar(value="Ready to install…")
+        tk.Label(body, textvariable=self.step_var, bg=self.BG, fg=self.FG,
+                 font=("Segoe UI", 11, "bold"), anchor="w").pack(fill="x")
+
+        # Progress bar
+        style = ttk.Style(self)
+        style.theme_use("clam")
+        style.configure("TD.Horizontal.TProgressbar",
+                         troughcolor="#2a2b4a",
+                         background=self.ACCENT,
+                         borderwidth=0, thickness=10)
+        self.pbar = ttk.Progressbar(body, style="TD.Horizontal.TProgressbar",
+                                     maximum=len(STEPS), length=576)
+        self.pbar.pack(pady=(8, 4))
+
+        # Log output
+        self.log = tk.Text(body, bg="#0e0f20", fg=self.FG_DIM,
+                           font=("Monospace", 9), relief="flat",
+                           height=10, state="disabled", wrap="word")
+        self.log.pack(fill="both", expand=True, pady=(12, 16))
+
+        # Footer buttons
+        btn_frame = tk.Frame(self, bg=self.BG)
+        btn_frame.pack(fill="x", padx=32, pady=(0, 20))
+
+        self.close_btn = tk.Button(btn_frame, text="Cancel",
+                                   bg="#2a2b4a", fg=self.FG,
+                                   activebackground="#3a3b5a",
+                                   relief="flat", padx=20, pady=8,
+                                   font=("Segoe UI", 10),
+                                   command=self._on_close)
+        self.close_btn.pack(side="right", padx=(8, 0))
+
+        self.install_btn = tk.Button(btn_frame, text="  Install  ",
+                                     bg=self.ACCENT, fg="white",
+                                     activebackground="#7B73FF",
+                                     relief="flat", padx=20, pady=8,
+                                     font=("Segoe UI", 10, "bold"),
+                                     command=self._start_install)
+        self.install_btn.pack(side="right")
+
+    # ── Helpers ───────────────────────────────────────────────────────────────
