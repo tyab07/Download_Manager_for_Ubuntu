@@ -89,3 +89,27 @@ def copy_tree(src: Path, dst: Path):
             shutil.copy2(item, target)
 
 # ── Main GUI class ────────────────────────────────────────────────────────────
+class InstallerApp(tk.Tk):
+    BG       = "#12132a"
+    FG       = "#e0e0e0"
+    ACCENT   = "#6C63FF"
+    SUCCESS  = "#4CAF50"
+    ERROR    = "#F44336"
+    FG_DIM   = "#888888"
+
+    def __init__(self):
+        super().__init__()
+        self.title("TDDownloader — Installer")
+        self.configure(bg=self.BG)
+        self.resizable(False, False)
+
+        # Center window  640 × 440
+        W, H = 640, 440
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        self.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
+
+        self._build_ui()
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    # ── UI ────────────────────────────────────────────────────────────────────
