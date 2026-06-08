@@ -19,3 +19,15 @@ from PyQt6.QtGui import QFont
 from gui.main_window import MainWindow
 
 
+def main():
+    app = QApplication(sys.argv)
+
+    # Ensure default download directory exists
+    dl_dir = os.path.join(os.path.expanduser("~"), "TDdownloader")
+    os.makedirs(dl_dir, exist_ok=True)
+
+    # Set application metadata
+    app.setApplicationName("TDDownloader")
+    app.setApplicationVersion("2.0.0")
+    app.setOrganizationName("TDDownloader")
+
