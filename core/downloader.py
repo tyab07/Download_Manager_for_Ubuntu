@@ -53,3 +53,21 @@ class DownloadEngine:
         self._status_callback: Optional[Callable] = None
         self._session: Optional[aiohttp.ClientSession] = None
 
+    def set_progress_callback(self, callback: Callable):
+        self._progress_callback = callback
+
+    def set_status_callback(self, callback: Callable):
+        self._status_callback = callback
+
+    async def _get_session(self):
+        if self._session is None or self._session.closed:
+            timeout = aiohttp.ClientTimeout(total=None, connect=30)
+            self._session = aiohttp.ClientSession(
+                timeout=timeout,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                                  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
+            )
+        return self._session
+
