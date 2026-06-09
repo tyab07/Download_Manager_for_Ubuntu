@@ -238,3 +238,34 @@ class DownloadEngine:
                         if self._progress_callback:
                             self._progress_callback(task.download_id, task.downloaded, task.file_size)
 
+    def pause_download(self, download_id: int):
+        task = self._active_tasks.get(download_id)
+        if task and task.status == "downloading":
+            task._pause_event.clear()
+            task.status = "paused"
+            if self._status_callback:
+                self._status_callback(download_id, "paused")
+
+    def resume_download(self, download_id: int):
+        task = self._active_tasks.get(download_id)
+        if task and task.status == "paused":
+            task._pause_event.set()
+            task.status = "downloading"
+            if self._status_callback:
+                self._status_callback(download_id, "downloading")
+
+    def cancel_download(self, download_id: int):
+        task = self._active_tasks.get(download_id)
+        if task:
+            task._cancel = True
+            task._pause_event.set()
+            task.status = "cancelled"
+            if self._status_callback:
+                self._status_callback(download_id, "cancelled")
+
+    def get_task(self, download_id: int) -> Optional[DownloadTask]:
+        return self._active_tasks.get(download_id)
+
+    async def close(self):
+        if self._session and not self._session.closed:
+            await self._session.close()
