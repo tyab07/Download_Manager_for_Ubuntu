@@ -186,3 +186,55 @@ class DownloadEngine:
         except OSError:
             pass
 
+    async def _download_segment(self, task: DownloadTask, seg: SegmentInfo, sem: asyncio.Semaphore):
+        """Download a single segment with Range header."""
+        async with sem:
+            session = await self._get_session()
+            headers = {"Range": f"bytes={seg.start}-{seg.end}"}
+
+            async with session.get(task.url, headers=headers) as resp:
+                mode = "ab" if seg.downloaded > 0 else "wb"
+                with open(seg.temp_file, mode) as f:
+                    async for chunk in resp.content.iter_chunked(self.CHUNK_SIZE):
+                        # Check for pause
+                        await task._pause_event.wait()
+                        if task._cancel:
+                            return
+
+                        f.write(chunk)
+                        seg.downloaded += len(chunk)
+                        task.downloaded = sum(s.downloaded for s in task._segment_infos)
+
+                        if self._progress_callback:
+                            self._progress_callback(task.download_id, task.downloaded, task.file_size)
+
+    async def _single_download(self, task: DownloadTask):
+        """Single-stream download for non-resumable files."""
+        session = await self._get_session()
+        output_path = os.path.join(task.save_path, task.filename)
+        os.makedirs(task.save_path, exist_ok=True)
+
+        start_time = time.time()
+        last_update = start_time
+
+        async with session.get(task.url) as resp:
+            if task.file_size == 0:
+                task.file_size = int(resp.headers.get("Content-Length", 0))
+
+            with open(output_path, "wb") as f:
+                async for chunk in resp.content.iter_chunked(self.CHUNK_SIZE):
+                    await task._pause_event.wait()
+                    if task._cancel:
+                        return
+
+                    f.write(chunk)
+                    task.downloaded += len(chunk)
+
+                    now = time.time()
+                    if now - last_update > 0.25:
+                        elapsed = now - start_time
+                        task.speed = task.downloaded / elapsed if elapsed > 0 else 0
+                        last_update = now
+                        if self._progress_callback:
+                            self._progress_callback(task.download_id, task.downloaded, task.file_size)
+
