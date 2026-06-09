@@ -42,3 +42,14 @@ class DownloadTask:
         self._pause_event.set()  # Not paused initially
 
 
+class DownloadEngine:
+    """Async multi-segment downloader with pause/resume support."""
+
+    CHUNK_SIZE = 1024 * 64  # 64KB chunks
+
+    def __init__(self):
+        self._active_tasks: dict[int, DownloadTask] = {}
+        self._progress_callback: Optional[Callable] = None
+        self._status_callback: Optional[Callable] = None
+        self._session: Optional[aiohttp.ClientSession] = None
+
