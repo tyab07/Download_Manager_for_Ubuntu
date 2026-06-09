@@ -71,3 +71,23 @@ class DownloadEngine:
             )
         return self._session
 
+    async def get_file_info(self, url: str) -> tuple[int, bool, str]:
+        """Get file size, resume support, and filename from URL."""
+        session = await self._get_session()
+        try:
+            async with session.head(url, allow_redirects=True) as resp:
+                file_size = int(resp.headers.get("Content-Length", 0))
+                accept_ranges = resp.headers.get("Accept-Ranges", "none")
+                resumable = accept_ranges.lower() == "bytes" and file_size > 0
+                content_disp = resp.headers.get("Content-Disposition", "")
+                filename = ""
+                if "filename=" in content_disp:
+                    filename = content_disp.split("filename=")[-1].strip('"').strip("'")
+                if not filename:
+                    filename = url.split("/")[-1].split("?")[0]
+                if not filename:
+                    filename = "download"
+                return file_size, resumable, filename
+        except Exception:
+            return 0, False, url.split("/")[-1].split("?")[0] or "download"
+
