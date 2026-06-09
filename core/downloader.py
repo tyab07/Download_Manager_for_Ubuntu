@@ -129,3 +129,60 @@ class DownloadEngine:
             if task.download_id in self._active_tasks and task.status in ("completed", "error"):
                 del self._active_tasks[task.download_id]
 
+    async def _segmented_download(self, task: DownloadTask):
+        """Download file in multiple segments concurrently."""
+        segment_size = task.file_size // task.segments
+        temp_dir = tempfile.mkdtemp(prefix=f"dl_{task.download_id}_")
+
+        # Create segment infos
+        segments = []
+        for i in range(task.segments):
+            start = i * segment_size
+            end = task.file_size - 1 if i == task.segments - 1 else (i + 1) * segment_size - 1
+            temp_file = os.path.join(temp_dir, f"segment_{i}.tmp")
+
+            # Check for existing partial segment
+            existing_downloaded = 0
+            if os.path.exists(temp_file):
+                existing_downloaded = os.path.getsize(temp_file)
+
+            seg = SegmentInfo(
+                index=i,
+                start=start + existing_downloaded,
+                end=end,
+                downloaded=existing_downloaded,
+                temp_file=temp_file,
+            )
+            segments.append(seg)
+
+        task._segment_infos = segments
+
+        # Download all segments concurrently
+        sem = asyncio.Semaphore(task.segments)
+        download_tasks = [
+            self._download_segment(task, seg, sem) for seg in segments
+        ]
+        await asyncio.gather(*download_tasks)
+
+        if task._cancel:
+            return
+
+        # Merge segments into final file
+        output_path = os.path.join(task.save_path, task.filename)
+        os.makedirs(task.save_path, exist_ok=True)
+        with open(output_path, "wb") as outfile:
+            for seg in sorted(segments, key=lambda s: s.index):
+                with open(seg.temp_file, "rb") as infile:
+                    while True:
+                        chunk = infile.read(self.CHUNK_SIZE)
+                        if not chunk:
+                            break
+                        outfile.write(chunk)
+                os.remove(seg.temp_file)
+
+        # Cleanup temp dir
+        try:
+            os.rmdir(temp_dir)
+        except OSError:
+            pass
+
