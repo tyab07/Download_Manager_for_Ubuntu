@@ -91,3 +91,41 @@ class DownloadEngine:
         except Exception:
             return 0, False, url.split("/")[-1].split("?")[0] or "download"
 
+    async def start_download(self, task: DownloadTask):
+        """Start or resume a segmented download."""
+        self._active_tasks[task.download_id] = task
+        task.status = "downloading"
+
+        if self._status_callback:
+            self._status_callback(task.download_id, "downloading")
+
+        try:
+            # Get file info if we don't have it
+            if task.file_size == 0:
+                file_size, resumable, _ = await self.get_file_info(task.url)
+                task.file_size = file_size
+                task.resumable = resumable
+
+            if task.resumable and task.file_size > 0 and task.segments > 1:
+                await self._segmented_download(task)
+            else:
+                await self._single_download(task)
+
+            if not task._cancel:
+                task.status = "completed"
+                if self._status_callback:
+                    self._status_callback(task.download_id, "completed")
+
+        except asyncio.CancelledError:
+            task.status = "paused"
+            if self._status_callback:
+                self._status_callback(task.download_id, "paused")
+        except Exception as e:
+            task.status = "error"
+            task.error = str(e)
+            if self._status_callback:
+                self._status_callback(task.download_id, "error", str(e))
+        finally:
+            if task.download_id in self._active_tasks and task.status in ("completed", "error"):
+                del self._active_tasks[task.download_id]
+
