@@ -37,3 +37,11 @@ class QueueManager:
             if self._loop:
                 async_task = self._loop.create_task(self._run_download(task))
                 self._active_downloads[task.download_id] = async_task
+
+    async def _run_download(self, task: DownloadTask):
+        """Run a download and manage queue after completion."""
+        try:
+            await self.engine.start_download(task)
+        except Exception as e:
+            task.status = "error"
+            task.error = str(e)
