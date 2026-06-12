@@ -17,3 +17,10 @@ class QueueManager:
         self._active_downloads: dict[int, asyncio.Task] = {}
         self._queue: list[DownloadTask] = []
         self._loop: Optional[asyncio.AbstractEventLoop] = None
+
+    def set_loop(self, loop: asyncio.AbstractEventLoop):
+        self._loop = loop
+
+    @property
+    def active_count(self) -> int:
+        return len(self._active_downloads)
