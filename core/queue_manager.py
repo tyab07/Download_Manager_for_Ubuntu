@@ -55,3 +55,13 @@ class QueueManager:
                 self.db.set_status(task.download_id, "error", task.error)
             # Try starting next in queue
             self._try_start_next()
+
+    def pause(self, download_id: int):
+        self.engine.pause_download(download_id)
+        self.db.set_status(download_id, "paused")
+
+    def resume(self, download_id: int):
+        task = self.engine.get_task(download_id)
+        if task:
+            self.engine.resume_download(download_id)
+            self.db.set_status(download_id, "downloading")
