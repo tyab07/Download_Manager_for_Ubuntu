@@ -24,3 +24,8 @@ class QueueManager:
     @property
     def active_count(self) -> int:
         return len(self._active_downloads)
+
+    def add_to_queue(self, task: DownloadTask):
+        """Add download to queue and start if slots available."""
+        self._queue.append(task)
+        self._try_start_next()
