@@ -80,3 +80,15 @@ class QueueManager:
                     resumable=bool(dl["resumable"]),
                 )
                 self.add_to_queue(new_task)
+
+    def cancel(self, download_id: int):
+        self.engine.cancel_download(download_id)
+        async_task = self._active_downloads.pop(download_id, None)
+        if async_task:
+            async_task.cancel()
+        self.db.set_status(download_id, "cancelled")
+
+    def cancel_all(self):
+        for did in list(self._active_downloads.keys()):
+            self.cancel(did)
+        self._queue.clear()
