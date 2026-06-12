@@ -65,3 +65,18 @@ class QueueManager:
         if task:
             self.engine.resume_download(download_id)
             self.db.set_status(download_id, "downloading")
+        else:
+            # Re-queue from database
+            dl = self.db.get_download(download_id)
+            if dl:
+                new_task = DownloadTask(
+                    download_id=dl["id"],
+                    url=dl["url"],
+                    filename=dl["filename"],
+                    save_path=dl["save_path"],
+                    file_size=dl["file_size"],
+                    downloaded=dl["downloaded_size"],
+                    segments=dl["segments"],
+                    resumable=bool(dl["resumable"]),
+                )
+                self.add_to_queue(new_task)
