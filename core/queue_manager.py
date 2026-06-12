@@ -29,3 +29,11 @@ class QueueManager:
         """Add download to queue and start if slots available."""
         self._queue.append(task)
         self._try_start_next()
+
+    def _try_start_next(self):
+        """Start next queued download if concurrent limit allows."""
+        while self._queue and self.active_count < self.max_concurrent:
+            task = self._queue.pop(0)
+            if self._loop:
+                async_task = self._loop.create_task(self._run_download(task))
+                self._active_downloads[task.download_id] = async_task
