@@ -45,3 +45,13 @@ class QueueManager:
         except Exception as e:
             task.status = "error"
             task.error = str(e)
+        finally:
+            self._active_downloads.pop(task.download_id, None)
+            # Update database
+            if task.status == "completed":
+                self.db.update_progress(task.download_id, task.downloaded, task.speed)
+                self.db.set_status(task.download_id, "completed")
+            elif task.status == "error":
+                self.db.set_status(task.download_id, "error", task.error)
+            # Try starting next in queue
+            self._try_start_next()
