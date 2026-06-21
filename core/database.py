@@ -46,3 +46,12 @@ class DownloadDatabase:
                 metadata TEXT DEFAULT '{}'
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+        """)
+        # Default download directory
+        default_dl_dir = str(Path.home() / "TDdownloader")
+        os.makedirs(default_dl_dir, exist_ok=True)
