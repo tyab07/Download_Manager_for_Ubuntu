@@ -72,3 +72,18 @@ class DownloadDatabase:
             )
         conn.commit()
         conn.close()
+
+    # ─── Download CRUD ───────────────────────────────────────
+
+    def add_download(self, url, filename, save_path, file_size=0, segments=8, mime_type="", resumable=False):
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        cursor.execute(
+            """INSERT INTO downloads (url, filename, save_path, file_size, segments, mime_type, resumable)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (url, filename, save_path, file_size, segments, mime_type, int(resumable)),
+        )
+        download_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return download_id
