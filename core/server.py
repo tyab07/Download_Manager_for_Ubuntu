@@ -45,6 +45,9 @@ class LocalServer:
 
         self._setup_routes()
 
+    def __repr__(self):
+        return f"<LocalServer(port={self.port})>"
+
     def set_download_callback(self, callback: Callable):
         """Set callback function when new download is received."""
         self._download_callback = callback
