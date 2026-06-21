@@ -23,3 +23,26 @@ class DownloadDatabase:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL")
         return conn
+
+    def _init_db(self):
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS downloads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                url TEXT NOT NULL,
+                filename TEXT NOT NULL,
+                save_path TEXT NOT NULL,
+                file_size INTEGER DEFAULT 0,
+                downloaded_size INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'queued',
+                speed REAL DEFAULT 0,
+                segments INTEGER DEFAULT 8,
+                date_added TEXT DEFAULT CURRENT_TIMESTAMP,
+                date_completed TEXT,
+                mime_type TEXT DEFAULT '',
+                resumable INTEGER DEFAULT 0,
+                error_message TEXT DEFAULT '',
+                metadata TEXT DEFAULT '{}'
+            )
+        """)
