@@ -55,3 +55,20 @@ class DownloadDatabase:
         # Default download directory
         default_dl_dir = str(Path.home() / "TDdownloader")
         os.makedirs(default_dl_dir, exist_ok=True)
+
+        # Insert default settings
+        defaults = {
+            "download_dir": default_dl_dir,
+            "max_concurrent": "3",
+            "segments": "8",
+            "server_port": "5000",
+            "theme": "dark",
+            "max_speed": "0",
+        }
+        for key, value in defaults.items():
+            cursor.execute(
+                "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+                (key, value),
+            )
+        conn.commit()
+        conn.close()
