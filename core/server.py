@@ -22,3 +22,25 @@ class DownloadRequest(BaseModel):
 class ServerResponse(BaseModel):
     status: str
     message: str
+
+
+class LocalServer:
+    """FastAPI server running on localhost to receive download tasks from Chrome extension."""
+
+    def __init__(self, port: int = 5000):
+        self.port = port
+        self.app = FastAPI(title="Ubuntu Download Manager API")
+        self._download_callback: Optional[Callable] = None
+        self._server_thread: Optional[threading.Thread] = None
+        self._server: Optional[uvicorn.Server] = None
+
+        # CORS for Chrome extension
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+        self._setup_routes()
