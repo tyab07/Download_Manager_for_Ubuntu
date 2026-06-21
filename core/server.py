@@ -82,3 +82,25 @@ class LocalServer:
                 "status": "running",
                 "port": self.port,
             }
+
+    def start(self):
+        """Start the server in a background thread."""
+        config = uvicorn.Config(
+            app=self.app,
+            host="127.0.0.1",
+            port=self.port,
+            log_level="warning",
+        )
+        self._server = uvicorn.Server(config)
+
+        self._server_thread = threading.Thread(
+            target=self._server.run,
+            daemon=True,
+            name="DownloadServer",
+        )
+        self._server_thread.start()
+
+    def stop(self):
+        """Stop the server."""
+        if self._server:
+            self._server.should_exit = True
