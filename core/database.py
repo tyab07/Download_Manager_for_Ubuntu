@@ -122,3 +122,15 @@ class DownloadDatabase:
         rows = conn.execute("SELECT * FROM downloads ORDER BY date_added DESC").fetchall()
         conn.close()
         return [dict(r) for r in rows]
+
+    def get_downloads_by_status(self, status):
+        conn = self._get_conn()
+        rows = conn.execute("SELECT * FROM downloads WHERE status=? ORDER BY date_added DESC", (status,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def delete_download(self, download_id):
+        conn = self._get_conn()
+        conn.execute("DELETE FROM downloads WHERE id=?", (download_id,))
+        conn.commit()
+        conn.close()
