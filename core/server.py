@@ -53,3 +53,25 @@ class LocalServer:
         @self.app.get("/ping")
         async def ping():
             return {"status": "ok", "app": "UbuntuDownloader"}
+
+        @self.app.post("/download", response_model=ServerResponse)
+        async def add_download(req: DownloadRequest):
+            if not req.url:
+                raise HTTPException(status_code=400, detail="URL is required")
+
+            if self._download_callback:
+                try:
+                    self._download_callback(
+                        url=req.url,
+                        filename=req.filename or "",
+                        filesize=req.filesize or 0,
+                        mime_type=req.mime_type or "",
+                    )
+                    return ServerResponse(
+                        status="ok",
+                        message=f"Download added: {req.filename or req.url}"
+                    )
+                except Exception as e:
+                    raise HTTPException(status_code=500, detail=str(e))
+            else:
+                raise HTTPException(status_code=503, detail="Download manager not ready")
