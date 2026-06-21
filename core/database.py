@@ -134,3 +134,18 @@ class DownloadDatabase:
         conn.execute("DELETE FROM downloads WHERE id=?", (download_id,))
         conn.commit()
         conn.close()
+
+    def clear_completed(self):
+        conn = self._get_conn()
+        conn.execute("DELETE FROM downloads WHERE status='completed'")
+        conn.commit()
+        conn.close()
+
+    def update_file_size(self, download_id, file_size, resumable):
+        conn = self._get_conn()
+        conn.execute(
+            "UPDATE downloads SET file_size=?, resumable=? WHERE id=?",
+            (file_size, int(resumable), download_id),
+        )
+        conn.commit()
+        conn.close()
