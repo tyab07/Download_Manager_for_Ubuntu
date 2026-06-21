@@ -44,3 +44,12 @@ class LocalServer:
         )
 
         self._setup_routes()
+
+    def set_download_callback(self, callback: Callable):
+        """Set callback function when new download is received."""
+        self._download_callback = callback
+
+    def _setup_routes(self):
+        @self.app.get("/ping")
+        async def ping():
+            return {"status": "ok", "app": "UbuntuDownloader"}
