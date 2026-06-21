@@ -75,3 +75,10 @@ class LocalServer:
                     raise HTTPException(status_code=500, detail=str(e))
             else:
                 raise HTTPException(status_code=503, detail="Download manager not ready")
+
+        @self.app.get("/status")
+        async def server_status():
+            return {
+                "status": "running",
+                "port": self.port,
+            }
