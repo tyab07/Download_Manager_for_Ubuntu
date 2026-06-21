@@ -110,3 +110,15 @@ class DownloadDatabase:
         )
         conn.commit()
         conn.close()
+
+    def get_download(self, download_id):
+        conn = self._get_conn()
+        row = conn.execute("SELECT * FROM downloads WHERE id=?", (download_id,)).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def get_all_downloads(self):
+        conn = self._get_conn()
+        rows = conn.execute("SELECT * FROM downloads ORDER BY date_added DESC").fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
