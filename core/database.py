@@ -87,3 +87,26 @@ class DownloadDatabase:
         conn.commit()
         conn.close()
         return download_id
+
+    def update_progress(self, download_id, downloaded_size, speed=0):
+        conn = self._get_conn()
+        conn.execute(
+            "UPDATE downloads SET downloaded_size=?, speed=?, status='downloading' WHERE id=?",
+            (downloaded_size, speed, download_id),
+        )
+        conn.commit()
+        conn.close()
+
+    def set_status(self, download_id, status, error_message=""):
+        conn = self._get_conn()
+        extra = ""
+        params = [status, error_message, download_id]
+        if status == "completed":
+            extra = ", date_completed=?"
+            params = [status, error_message, datetime.now().isoformat(), download_id]
+        conn.execute(
+            f"UPDATE downloads SET status=?, error_message=?{extra} WHERE id=?",
+            params,
+        )
+        conn.commit()
+        conn.close()
