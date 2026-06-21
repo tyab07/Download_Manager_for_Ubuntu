@@ -149,3 +149,26 @@ class DownloadDatabase:
         )
         conn.commit()
         conn.close()
+
+    # ─── Settings ────────────────────────────────────────────
+
+    def get_setting(self, key, default=""):
+        conn = self._get_conn()
+        row = conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+        conn.close()
+        return row["value"] if row else default
+
+    def set_setting(self, key, value):
+        conn = self._get_conn()
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+            (key, str(value)),
+        )
+        conn.commit()
+        conn.close()
+
+    def get_all_settings(self):
+        conn = self._get_conn()
+        rows = conn.execute("SELECT * FROM settings").fetchall()
+        conn.close()
+        return {r["key"]: r["value"] for r in rows}
