@@ -136,3 +136,37 @@ class VideoExtractor:
                 self._status_callback(download_id, "error", str(e))
             return {"success": False, "error": str(e)}
 
+    def extract_playlist(self, url: str) -> dict:
+        """Extract playlist info — returns list of video entries."""
+        ydl_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": "in_playlist",
+            "ignoreerrors": True,
+        }
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                if info is None:
+                    return {"error": "Could not extract playlist info"}
+
+                entries = []
+                for entry in info.get("entries", []) or []:
+                    if entry is None:
+                        continue
+                    entries.append({
+                        "url": entry.get("url") or entry.get("webpage_url", ""),
+                        "title": entry.get("title", "Unknown"),
+                        "duration": entry.get("duration", 0),
+                        "id": entry.get("id", ""),
+                    })
+
+                return {
+                    "title": info.get("title", "Playlist"),
+                    "uploader": info.get("uploader", "Unknown"),
+                    "count": len(entries),
+                    "entries": entries,
+                }
+        except Exception as e:
+            return {"error": str(e)}
+
