@@ -122,3 +122,18 @@ class AddDownloadDialog(QDialog):
 
         layout.addLayout(path_layout)
 
+        # Segments
+        seg_layout = QHBoxLayout()
+        seg_label = QLabel("Segments:")
+        seg_layout.addWidget(seg_label)
+
+        self.segments_spin = QSpinBox()
+        self.segments_spin.setRange(1, 32)
+        self.segments_spin.setValue(8)
+        self.segments_spin.setFixedWidth(80)
+        seg_layout.addWidget(self.segments_spin)
+        seg_layout.addStretch()
+
+        layout.addLayout(seg_layout)
+        layout.addStretch()
+
