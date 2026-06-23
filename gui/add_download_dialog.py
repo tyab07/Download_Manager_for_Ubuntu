@@ -137,3 +137,37 @@ class AddDownloadDialog(QDialog):
         layout.addLayout(seg_layout)
         layout.addStretch()
 
+        # Buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setStyleSheet("""
+            QPushButton {
+                background: #2a2b4a;
+                color: #e0e0e0;
+                border: 1px solid #3a3b5a;
+            }
+            QPushButton:hover { background: #3a3b5a; }
+        """)
+        cancel_btn.clicked.connect(self.reject)
+        btn_layout.addWidget(cancel_btn)
+
+        add_btn = QPushButton("⬇  Add Download")
+        add_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #6C63FF, stop:1 #3F3D9E);
+                color: white;
+                border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #7B73FF, stop:1 #4F4DAE);
+            }
+        """)
+        add_btn.clicked.connect(self._on_add)
+        btn_layout.addWidget(add_btn)
+
+        layout.addLayout(btn_layout)
+
