@@ -170,3 +170,24 @@ class VideoExtractor:
         except Exception as e:
             return {"error": str(e)}
 
+    @staticmethod
+    def is_playlist_url(url: str) -> bool:
+        """Check if URL is a YouTube playlist URL."""
+        url_lower = url.lower()
+        if "youtube.com" in url_lower or "youtu.be" in url_lower:
+            if "list=" in url_lower or "/playlist" in url_lower:
+                return True
+        return False
+
+    @staticmethod
+    def is_video_url(url: str) -> bool:
+        """Check if URL is from a supported video platform."""
+        video_domains = [
+            "youtube.com", "youtu.be", "facebook.com", "fb.watch",
+            "tiktok.com", "instagram.com", "twitter.com", "x.com",
+            "vimeo.com", "dailymotion.com", "twitch.tv",
+            "reddit.com", "streamable.com", "rumble.com",
+        ]
+        url_lower = url.lower()
+        return any(domain in url_lower for domain in video_domains)
+
