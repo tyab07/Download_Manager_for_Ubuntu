@@ -171,3 +171,25 @@ class AddDownloadDialog(QDialog):
 
         layout.addLayout(btn_layout)
 
+    def _browse_path(self):
+        path = QFileDialog.getExistingDirectory(self, "Select Download Folder", self.default_path)
+        if path:
+            self.path_input.setText(path)
+
+    def _on_add(self):
+        url = self.url_input.text().strip()
+        if not url:
+            self.url_input.setStyleSheet(self.url_input.styleSheet() + "border-color: #F44336;")
+            return
+
+        filename = self.name_input.text().strip()
+        save_path = self.path_input.text().strip()
+        segments = self.segments_spin.value()
+
+        self.download_requested.emit(url, filename, save_path, segments)
+        self.accept()
+
+    def set_url(self, url: str, filename: str = ""):
+        self.url_input.setText(url)
+        if filename:
+            self.name_input.setText(filename)
