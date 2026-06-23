@@ -191,3 +191,12 @@ class VideoExtractor:
         url_lower = url.lower()
         return any(domain in url_lower for domain in video_domains)
 
+    @staticmethod
+    def _format_size(size_bytes: int) -> str:
+        if size_bytes <= 0:
+            return "Unknown"
+        for unit in ["B", "KB", "MB", "GB"]:
+            if size_bytes < 1024:
+                return f"{size_bytes:.1f} {unit}"
+            size_bytes /= 1024
+        return f"{size_bytes:.1f} TB"
