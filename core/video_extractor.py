@@ -98,3 +98,41 @@ class VideoExtractor:
                 })
         return best
 
+    def download_video(self, url: str, format_id: str = "best",
+                       output_dir: str = None, download_id: int = 0) -> dict:
+        """Download video with selected format."""
+        output = output_dir or self.download_dir
+        os.makedirs(output, exist_ok=True)
+
+        def progress_hook(d):
+            if d["status"] == "downloading" and self._progress_callback:
+                downloaded = d.get("downloaded_bytes", 0)
+                total = d.get("total_bytes") or d.get("total_bytes_estimate", 0)
+                self._progress_callback(download_id, downloaded, total)
+            elif d["status"] == "finished" and self._status_callback:
+                self._status_callback(download_id, "completed")
+
+        ydl_opts = {
+            "format": format_id,
+            "outtmpl": os.path.join(output, "%(title)s.%(ext)s"),
+            "progress_hooks": [progress_hook],
+            "quiet": True,
+            "no_warnings": True,
+            "merge_output_format": "mp4",
+        }
+
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                filename = ydl.prepare_filename(info)
+                return {
+                    "success": True,
+                    "filename": os.path.basename(filename),
+                    "path": filename,
+                    "title": info.get("title", ""),
+                }
+        except Exception as e:
+            if self._status_callback:
+                self._status_callback(download_id, "error", str(e))
+            return {"success": False, "error": str(e)}
+
