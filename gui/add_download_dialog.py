@@ -95,3 +95,30 @@ class AddDownloadDialog(QDialog):
         self.url_input.setPlaceholderText("https://example.com/file.zip")
         layout.addWidget(self.url_input)
 
+        # Filename
+        name_label = QLabel("Filename (auto-detected if empty)")
+        layout.addWidget(name_label)
+
+        self.name_input = QLineEdit()
+        self.name_input.setPlaceholderText("Leave empty for auto-detect")
+        layout.addWidget(self.name_input)
+
+        # Save path
+        path_layout = QHBoxLayout()
+        self.path_input = QLineEdit(self.default_path)
+        path_layout.addWidget(self.path_input, 1)
+
+        browse_btn = QPushButton("Browse")
+        browse_btn.setStyleSheet("""
+            QPushButton {
+                background: #2a2b4a;
+                color: #e0e0e0;
+                border: 1px solid #3a3b5a;
+            }
+            QPushButton:hover { background: #3a3b5a; }
+        """)
+        browse_btn.clicked.connect(self._browse_path)
+        path_layout.addWidget(browse_btn)
+
+        layout.addLayout(path_layout)
+
