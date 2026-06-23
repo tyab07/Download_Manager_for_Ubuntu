@@ -74,3 +74,27 @@ class VideoExtractor:
         except Exception as e:
             return {"error": str(e)}
 
+    def get_best_formats(self, url: str) -> list:
+        """Get simplified list of best format options."""
+        info = self.extract_info(url)
+        if "error" in info:
+            return []
+
+        seen = set()
+        best = []
+        for f in info.get("formats", []):
+            res = f.get("resolution", "audio only")
+            ext = f.get("ext", "")
+            key = f"{res}_{ext}"
+            if key not in seen:
+                seen.add(key)
+                size = f.get("filesize", 0)
+                best.append({
+                    "format_id": f["format_id"],
+                    "label": f"{res} ({ext}) - {self._format_size(size)}" if size else f"{res} ({ext})",
+                    "ext": ext,
+                    "resolution": res,
+                    "filesize": size,
+                })
+        return best
+
