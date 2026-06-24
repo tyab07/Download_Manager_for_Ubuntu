@@ -285,3 +285,137 @@ class VideoDownloadDialog(QDialog):
                 return f"{size_bytes:.1f} {unit}"
             size_bytes /= 1024
         return f"{size_bytes:.1f} TB"
+
+    def _on_info_ready(self, info: dict):
+        self.progress.hide()
+        self.extract_btn.setEnabled(True)
+
+        if self._is_playlist:
+            self._show_playlist_info(info)
+        else:
+            self._show_video_info(info)
+
+    def _show_video_info(self, info: dict):
+        """Show single video formats."""
+        self._video_info = info
+
+        # Show info
+        duration = info.get("duration", 0)
+        dur_str = f"{duration // 60}:{duration % 60:02d}" if duration else "Unknown"
+        self.info_label.setText(
+            f"<b>{info.get('title', 'Unknown')}</b><br>"
+            f"👤 {info.get('uploader', 'Unknown')} • ⏱ {dur_str}"
+        )
+
+        # Populate format table
+        formats = info.get("formats", [])
+        self.format_table.setRowCount(len(formats))
+        for i, f in enumerate(formats):
+            self.format_table.setItem(i, 0, QTableWidgetItem(f.get("format_id", "")))
+            self.format_table.setItem(i, 1, QTableWidgetItem(f.get("resolution", "")))
+            self.format_table.setItem(i, 2, QTableWidgetItem(f.get("ext", "")))
+            size = f.get("filesize", 0)
+            size_str = self._format_size(size) if size else "~"
+            self.format_table.setItem(i, 3, QTableWidgetItem(size_str))
+            codec = []
+            if f.get("vcodec", "none") != "none":
+                codec.append(f["vcodec"][:10])
+            if f.get("acodec", "none") != "none":
+                codec.append(f["acodec"][:10])
+            self.format_table.setItem(i, 4, QTableWidgetItem(" + ".join(codec) or "unknown"))
+
+        self.format_table.show()
+        self.playlist_panel.hide()
+        self.format_table.selectRow(0)
+        self.download_btn.setEnabled(True)
+
+    def _show_playlist_info(self, info: dict):
+        """Show playlist entries with checkboxes."""
+        self._playlist_info = info
+        entries = info.get("entries", [])
+
+        self.info_label.setText(
+            f"<b>📋 {info.get('title', 'Playlist')}</b><br>"
+            f"👤 {info.get('uploader', 'Unknown')} • {len(entries)} videos"
+        )
+
+        # Populate playlist table
+        self._playlist_checkboxes.clear()
+        self.playlist_table.setRowCount(len(entries))
+
+        for i, entry in enumerate(entries):
+            # Number
+            num_item = QTableWidgetItem(str(i + 1))
+            num_item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+            num_item.setCheckState(Qt.CheckState.Checked)
+            self.playlist_table.setItem(i, 0, num_item)
+            self._playlist_checkboxes.append(num_item)
+
+            # Title
+            self.playlist_table.setItem(i, 1, QTableWidgetItem(entry.get("title", "Unknown")))
+
+            # Duration
+            dur = entry.get("duration", 0)
+            if dur:
+                dur_str = f"{dur // 60}:{dur % 60:02d}"
+            else:
+                dur_str = "—"
+            self.playlist_table.setItem(i, 2, QTableWidgetItem(dur_str))
+
+        self.format_table.hide()
+        self.select_all_check.setChecked(True)
+        self.playlist_panel.show()
+        self.download_btn.setEnabled(True)
+        self.download_btn.setText(f"⬇  Download {len(entries)} Videos")
+
+    def _toggle_select_all(self, checked):
+        state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+        for item in self._playlist_checkboxes:
+            item.setCheckState(state)
+        # Update button text
+        if self._is_playlist:
+            count = sum(1 for item in self._playlist_checkboxes if item.checkState() == Qt.CheckState.Checked)
+            self.download_btn.setText(f"⬇  Download {count} Videos")
+
+    def _on_download(self):
+        output_dir = self.path_input.text().strip()
+
+        if self._is_playlist:
+            # Gather selected videos
+            entries = self._playlist_info.get("entries", [])
+            selected = []
+            for i, item in enumerate(self._playlist_checkboxes):
+                if item.checkState() == Qt.CheckState.Checked and i < len(entries):
+                    selected.append(entries[i])
+
+            if not selected:
+                QMessageBox.warning(self, "No Selection", "Please select at least one video.")
+                return
+
+            # Map quality combo to yt-dlp format
+            quality_map = {
+                0: "bestvideo+bestaudio/best",  # Best
+                1: "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
+                2: "bestvideo[height<=720]+bestaudio/best[height<=720]",
+                3: "bestvideo[height<=480]+bestaudio/best[height<=480]",
+                4: "bestvideo[height<=360]+bestaudio/best[height<=360]",
+                5: "bestaudio/best",  # Audio Only
+            }
+            quality = quality_map.get(self.quality_combo.currentIndex(), "best")
+            self.download_playlist.emit(selected, quality, output_dir)
+        else:
+            # Single video
+            selected = self.format_table.selectedItems()
+            if not selected:
+                return
+            row = selected[0].row()
+            format_id = self.format_table.item(row, 0).text()
+            codec_text = self.format_table.item(row, 4).text()
+            
+            # If the selected format is missing audio (or video), use yt-dlp to merge
+            if format_id != "best" and "+" not in codec_text and "audio" not in codec_text.lower():
+                format_id = f"{format_id}+bestaudio/{format_id}"
+
+            self.download_video.emit(self.url_input.text().strip(), format_id, output_dir)
+
+        self.accept()
