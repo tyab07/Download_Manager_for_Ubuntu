@@ -155,3 +155,43 @@ class VideoDownloadDialog(QDialog):
         self.format_table.verticalHeader().setVisible(False)
         self.format_table.hide()
         layout.addWidget(self.format_table)
+
+        # === Playlist: quality selector + video list ===
+        self.playlist_panel = QWidget()
+        playlist_layout = QVBoxLayout(self.playlist_panel)
+        playlist_layout.setContentsMargins(0, 0, 0, 0)
+        playlist_layout.setSpacing(8)
+
+        # Quality combo
+        quality_row = QHBoxLayout()
+        quality_label = QLabel("Quality:")
+        quality_label.setStyleSheet("color: #e0e0e0; font-size: 13px;")
+        quality_row.addWidget(quality_label)
+
+        self.quality_combo = QComboBox()
+        self.quality_combo.addItems([
+            "Best (Video+Audio)", "1080p", "720p", "480p", "360p", "Audio Only (MP3)"
+        ])
+        self.quality_combo.setCurrentIndex(0)
+        quality_row.addWidget(self.quality_combo, 1)
+        playlist_layout.addLayout(quality_row)
+
+        # Select all checkbox
+        self.select_all_check = QCheckBox("Select All")
+        self.select_all_check.setChecked(True)
+        self.select_all_check.toggled.connect(self._toggle_select_all)
+        playlist_layout.addWidget(self.select_all_check)
+
+        # Playlist table with checkboxes
+        self.playlist_table = QTableWidget()
+        self.playlist_table.setColumnCount(3)
+        self.playlist_table.setHorizontalHeaderLabels(["#", "Title", "Duration"])
+        self.playlist_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.playlist_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.playlist_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.playlist_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.playlist_table.verticalHeader().setVisible(False)
+        playlist_layout.addWidget(self.playlist_table)
+
+        self.playlist_panel.hide()
+        layout.addWidget(self.playlist_panel)
