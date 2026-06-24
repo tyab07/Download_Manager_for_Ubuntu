@@ -98,3 +98,14 @@ class VideoDownloadDialog(QDialog):
         self._extract_thread = None
         self._playlist_checkboxes = []
         self._setup_ui()
+
+    def _setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setSpacing(12)
+        layout.setContentsMargins(24, 24, 24, 24)
+
+        # Title
+        title = QLabel("🎬  Video / Playlist Download")
+        title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        title.setStyleSheet("color: #ffffff; font-size: 16px;")
+        layout.addWidget(title)
