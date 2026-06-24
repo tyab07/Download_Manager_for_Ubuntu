@@ -144,3 +144,14 @@ class VideoDownloadDialog(QDialog):
         self.info_label.setWordWrap(True)
         self.info_label.setStyleSheet("color: #aaa; font-size: 11px; padding: 4px;")
         layout.addWidget(self.info_label)
+
+        # === Single video: format table ===
+        self.format_table = QTableWidget()
+        self.format_table.setColumnCount(5)
+        self.format_table.setHorizontalHeaderLabels(["Format", "Resolution", "Extension", "Size", "Codec"])
+        self.format_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.format_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.format_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.format_table.verticalHeader().setVisible(False)
+        self.format_table.hide()
+        layout.addWidget(self.format_table)
