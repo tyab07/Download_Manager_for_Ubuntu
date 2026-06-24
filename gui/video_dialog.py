@@ -195,3 +195,51 @@ class VideoDownloadDialog(QDialog):
 
         self.playlist_panel.hide()
         layout.addWidget(self.playlist_panel)
+
+        # Save path
+        path_layout = QHBoxLayout()
+        path_label = QLabel("Save to:")
+        path_layout.addWidget(path_label)
+        self.path_input = QLineEdit(self.default_path)
+        path_layout.addWidget(self.path_input, 1)
+        browse_btn = QPushButton("Browse")
+        browse_btn.setStyleSheet("""
+            QPushButton { background: #2a2b4a; color: #e0e0e0; border: 1px solid #3a3b5a; }
+            QPushButton:hover { background: #3a3b5a; }
+        """)
+        browse_btn.clicked.connect(self._browse)
+        path_layout.addWidget(browse_btn)
+        layout.addLayout(path_layout)
+
+        layout.addStretch()
+
+        # Buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setStyleSheet("""
+            QPushButton { background: #2a2b4a; color: #e0e0e0; border: 1px solid #3a3b5a; }
+            QPushButton:hover { background: #3a3b5a; }
+        """)
+        cancel_btn.clicked.connect(self.reject)
+        btn_layout.addWidget(cancel_btn)
+
+        self.download_btn = QPushButton("⬇  Download")
+        self.download_btn.setEnabled(False)
+        self.download_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #6C63FF, stop:1 #3F3D9E);
+                color: white; border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #7B73FF, stop:1 #4F4DAE);
+            }
+            QPushButton:disabled { background: #2a2b4a; color: #555; }
+        """)
+        self.download_btn.clicked.connect(self._on_download)
+        btn_layout.addWidget(self.download_btn)
+
+        layout.addLayout(btn_layout)
