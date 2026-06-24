@@ -37,3 +37,64 @@ class ExtractThread(QThread):
                 self.finished.emit(info)
         except Exception as e:
             self.error.emit(str(e))
+
+
+class VideoDownloadDialog(QDialog):
+    """Dialog to extract video info and choose format for downloading."""
+
+    download_video = pyqtSignal(str, str, str)  # url, format_id, output_dir
+    download_playlist = pyqtSignal(list, str, str)  # videos_list, quality, output_dir
+
+    DIALOG_STYLE = """
+        QDialog { background: #12132a; }
+        QLabel { color: #e0e0e0; font-size: 12px; }
+        QLineEdit {
+            background: #1e1f36; border: 1px solid #2a2b4a; border-radius: 8px;
+            padding: 10px 14px; color: #e0e0e0; font-size: 13px;
+        }
+        QLineEdit:focus { border: 1px solid #6C63FF; }
+        QPushButton { border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; }
+        QTableWidget {
+            background: #1e1f36; border: 1px solid #2a2b4a; border-radius: 8px;
+            color: #e0e0e0; gridline-color: #2a2b4a; selection-background-color: #6C63FF;
+        }
+        QTableWidget::item { padding: 4px 8px; }
+        QHeaderView::section {
+            background: #222340; color: #aaa; border: none;
+            padding: 6px; font-size: 11px; font-weight: 600;
+        }
+        QProgressBar {
+            background: #2a2b4a; border-radius: 3px; border: none; text-align: center;
+            color: white; font-size: 10px;
+        }
+        QProgressBar::chunk { background: #6C63FF; border-radius: 3px; }
+        QComboBox {
+            background: #1e1f36; border: 1px solid #2a2b4a; border-radius: 8px;
+            padding: 8px 14px; color: #e0e0e0; font-size: 13px;
+        }
+        QComboBox:focus { border: 1px solid #6C63FF; }
+        QComboBox QAbstractItemView {
+            background: #1e1f36; color: #e0e0e0; border: 1px solid #2a2b4a;
+            selection-background-color: #6C63FF;
+        }
+        QCheckBox { color: #e0e0e0; font-size: 12px; spacing: 8px; }
+        QCheckBox::indicator {
+            width: 18px; height: 18px; border-radius: 4px;
+            border: 1px solid #3a3b5a; background: #1e1f36;
+        }
+        QCheckBox::indicator:checked { background: #6C63FF; border: 1px solid #6C63FF; }
+    """
+
+    def __init__(self, extractor: VideoExtractor, default_path: str = "", parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Video Download")
+        self.setMinimumSize(700, 560)
+        self.setStyleSheet(self.DIALOG_STYLE)
+        self.extractor = extractor
+        self.default_path = default_path or str(Path.home() / "TDdownloader")
+        self._video_info = {}
+        self._playlist_info = {}
+        self._is_playlist = False
+        self._extract_thread = None
+        self._playlist_checkboxes = []
+        self._setup_ui()
