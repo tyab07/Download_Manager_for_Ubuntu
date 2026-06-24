@@ -109,3 +109,38 @@ class VideoDownloadDialog(QDialog):
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         title.setStyleSheet("color: #ffffff; font-size: 16px;")
         layout.addWidget(title)
+
+        # URL input
+        url_layout = QHBoxLayout()
+        self.url_input = QLineEdit()
+        self.url_input.setPlaceholderText("Paste YouTube, TikTok, Facebook... URL or Playlist URL")
+        url_layout.addWidget(self.url_input, 1)
+
+        self.extract_btn = QPushButton("🔍 Extract")
+        self.extract_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #6C63FF, stop:1 #3F3D9E);
+                color: white; border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #7B73FF, stop:1 #4F4DAE);
+            }
+        """)
+        self.extract_btn.clicked.connect(self._on_extract)
+        url_layout.addWidget(self.extract_btn)
+        layout.addLayout(url_layout)
+
+        # Progress
+        self.progress = QProgressBar()
+        self.progress.setFixedHeight(4)
+        self.progress.setRange(0, 0)
+        self.progress.hide()
+        layout.addWidget(self.progress)
+
+        # Video info
+        self.info_label = QLabel("")
+        self.info_label.setWordWrap(True)
+        self.info_label.setStyleSheet("color: #aaa; font-size: 11px; padding: 4px;")
+        layout.addWidget(self.info_label)
