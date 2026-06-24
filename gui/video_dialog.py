@@ -243,3 +243,45 @@ class VideoDownloadDialog(QDialog):
         btn_layout.addWidget(self.download_btn)
 
         layout.addLayout(btn_layout)
+
+    def _on_extract(self):
+        url = self.url_input.text().strip()
+        if not url:
+            return
+
+        self.extract_btn.setEnabled(False)
+        self.progress.show()
+        self.format_table.hide()
+        self.playlist_panel.hide()
+        self.download_btn.setEnabled(False)
+
+        # Detect playlist vs single video
+        self._is_playlist = VideoExtractor.is_playlist_url(url)
+        self.info_label.setText(
+            "Extracting playlist info..." if self._is_playlist else "Extracting video info..."
+        )
+
+        self._extract_thread = ExtractThread(url, self.extractor, self._is_playlist)
+        self._extract_thread.finished.connect(self._on_info_ready)
+        self._extract_thread.error.connect(self._on_extract_error)
+        self._extract_thread.start()
+
+    def _on_extract_error(self, error: str):
+        self.progress.hide()
+        self.extract_btn.setEnabled(True)
+        self.info_label.setText(f"<span style='color: #F44336;'>Error: {error}</span>")
+
+    def _browse(self):
+        path = QFileDialog.getExistingDirectory(self, "Select Folder", self.default_path)
+        if path:
+            self.path_input.setText(path)
+
+    @staticmethod
+    def _format_size(size_bytes: int) -> str:
+        if size_bytes <= 0:
+            return "?"
+        for unit in ["B", "KB", "MB", "GB"]:
+            if size_bytes < 1024:
+                return f"{size_bytes:.1f} {unit}"
+            size_bytes /= 1024
+        return f"{size_bytes:.1f} TB"
